@@ -61,9 +61,9 @@ BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2     = 0b00000100
 BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND    = 0b00000101
 
 # Accel Config Bitshifts
-BNO055_ACCEL_BANDWIDTH_BITSHIFT = 2
-BNO055_ACCEL_OPERATION_MODE_BITSHIFT = 5
-BNO055_ACCEL_G_RANGE_BITSHIFT = 0
+BNO055_ACCEL_OPERATION_MODE_BITSHIFT        = 0
+BNO055_ACCEL_BANDWIDTH_BITSHIFT             = 3
+BNO055_ACCEL_G_RANGE_BITSHIFT               = 6
 
 # PAGE0 REGISTER DEFINITION START
 BNO055_CHIP_ID_ADDR                  = 0x00
@@ -404,7 +404,7 @@ class BNO055(object):
 
     def _update_accel_config(self):
         """Sets the acceleration config according to the datasheet (see set_mode)."""
-        byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
+        byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
         self._write_byte(BNO055_ACCEL_CFG_ADDR, byte & 0xFF)
         # Sleep for 20 ms to allow changes time to propagate
         time.sleep(0.02)
@@ -467,7 +467,7 @@ class BNO055(object):
         # too).
         time.sleep(0.03)
 
-    def set_accel_g_range(self, g_range: int = BNO055_ACCEL_G_RANGE_4G):
+    def set_accel_g_range(self, g_range = BNO055_ACCEL_G_RANGE_4G):
         """Sets the acceleration G-Range to the specified range. Available ranges:
 
         BNO055_ACCEL_G_RANGE_2G
@@ -479,7 +479,7 @@ class BNO055(object):
         self._accel_g_range = g_range
         self._update_accel_config()
 
-    def set_accel_bandwidth(self, bandwidth: int = BNO055_ACCEL_BANDWIDTH_64Hz):
+    def set_accel_bandwidth(self, bandwidth =BNO055_ACCEL_BANDWIDTH_64Hz):
         """Sets teh acceleration update bandwidth to the specified value. Available values:
 
         BNO055_ACCEL_BANDWIDTH_8Hz
@@ -494,7 +494,7 @@ class BNO055(object):
         self._accel_bandwidth = bandwidth
         self._update_accel_config()
 
-    def set_accel_operation_mode(self, mode: int = BNO055_ACCEL_OPERATION_MODE_NORMAL):
+    def set_accel_operation_mode(self, mode = BNO055_ACCEL_OPERATION_MODE_NORMAL):
         """Sets the acceleration operation to the specified mode. Available modes:
 
         BNO055_ACCEL_OPERATION_MODE_NORMAL

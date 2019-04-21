@@ -406,10 +406,16 @@ class BNO055(object):
         """Sets the acceleration config according to the datasheet (see set_mode)."""
         byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
 
+        # Change to config mode
+        self._config_mode()
+
         # Send config byte to accel config register addr
         self._write_byte(BNO055_ACCEL_CFG_ADDR, byte & 0xFF)
         # Sleep for 20 ms to allow changes time to propagate
         time.sleep(0.02)
+
+        # Return to operation mode
+        self._operation_mode()
 
     def begin(self, mode=OPERATION_MODE_NDOF):
         """Initialize the BNO055 sensor.  Must be called once before any other

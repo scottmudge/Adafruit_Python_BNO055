@@ -35,6 +35,36 @@ BNO055_ID                            = 0xA0
 # Page id register definition
 BNO055_PAGE_ID_ADDR                  = 0X07
 
+# Accel G Range Config Value (Last 2 bits)
+BNO055_ACCEL_G_RANGE_2G              = 0b00000000
+BNO055_ACCEL_G_RANGE_4G              = 0b00000001
+BNO055_ACCEL_G_RANGE_8G              = 0b00000010
+BNO055_ACCEL_G_RANGE_16G             = 0b00000011
+
+# Accel Bandwidth Config Value (Middle 3 bits)
+BNO055_ACCEL_BANDWIDTH_8Hz           = 0b00000000
+BNO055_ACCEL_BANDWIDTH_16Hz          = 0b00000001
+BNO055_ACCEL_BANDWIDTH_32Hz          = 0b00000010
+BNO055_ACCEL_BANDWIDTH_64Hz          = 0b00000011
+BNO055_ACCEL_BANDWIDTH_128Hz         = 0b00000100
+BNO055_ACCEL_BANDWIDTH_256Hz         = 0b00000101
+BNO055_ACCEL_BANDWIDTH_512Hz         = 0b00000110
+BNO055_ACCEL_BANDWIDTH_1024Hz        = 0b00000111
+
+
+# Accel Operation Mode (First 3 bits)
+BNO055_ACCEL_OPERATION_MODE_NORMAL          = 0b00000000
+BNO055_ACCEL_OPERATION_MODE_SUSPEND         = 0b00000001
+BNO055_ACCEL_OPERATION_MODE_LOW_POWER_1     = 0b00000010
+BNO055_ACCEL_OPERATION_MODE_STANDBY         = 0b00000011
+BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2     = 0b00000100
+BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND    = 0b00000101
+
+# Accel Config Bitshifts
+BNO055_ACCEL_BANDWIDTH_BITSHIFT = 2
+BNO055_ACCEL_OPERATION_MODE_BITSHIFT = 5
+BNO055_ACCEL_G_RANGE_BITSHIFT = 0
+
 # PAGE0 REGISTER DEFINITION START
 BNO055_CHIP_ID_ADDR                  = 0x00
 BNO055_ACCEL_REV_ID_ADDR             = 0x01
@@ -121,6 +151,12 @@ BNO055_DATA_SELECT_ADDR              = 0X3C
 # Mode registers
 BNO055_OPR_MODE_ADDR                 = 0X3D
 BNO055_PWR_MODE_ADDR                 = 0X3E
+
+# Config registers
+BNO055_ACCEL_CFG_ADDR                = 0x08
+BNO055_MAG_CFG_ADDR                  = 0x09
+BNO055_GYR0_CFG_ADDR                 = 0x0A
+BNO055_GYR1_CFG_ADDR                 = 0x0B
 
 BNO055_SYS_TRIGGER_ADDR              = 0X3F
 BNO055_TEMP_SOURCE_ADDR              = 0X40
@@ -228,6 +264,11 @@ class BNO055(object):
             # Wait a 650 milliseconds in case setting the reset high reset the chip.
             time.sleep(0.65)
         self._serial = None
+
+        self._accel_g_range = BNO055_ACCEL_G_RANGE_4G
+        self._accel_bandwidth = BNO055_ACCEL_BANDWIDTH_64Hz
+        self._accel_operation_mode = BNO055_ACCEL_OPERATION_MODE_NORMAL
+
         self._i2c_device = None
         if serial_port is not None:
             # Use serial communication if serial_port name is provided.
@@ -361,6 +402,11 @@ class BNO055(object):
         # Enter operation mode to read sensor data.
         self.set_mode(self._mode)
 
+    def _update_accel_config(self):
+        """Sets the acceleration config according to the datasheet (see set_mode)."""
+        byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
+        self._write_byte(BNO055_ACCEL_CFG_ADDR, byte & 0xFF)
+
     def begin(self, mode=OPERATION_MODE_NDOF):
         """Initialize the BNO055 sensor.  Must be called once before any other
         BNO055 library functions.  Will return True if the BNO055 was
@@ -418,6 +464,46 @@ class BNO055(object):
         # can't hurt and the kernel is going to spend some unknown amount of time
         # too).
         time.sleep(0.03)
+
+    def set_accel_g_range(self, g_range: int = BNO055_ACCEL_G_RANGE_4G):
+        """Sets the acceleration G-Range to the specified range. Available ranges:
+
+        BNO055_ACCEL_G_RANGE_2G
+        BNO055_ACCEL_G_RANGE_4G
+        BNO055_ACCEL_G_RANGE_8G
+        BNO055_ACCEL_G_RANGE_16G
+
+        """
+        self._accel_g_range = g_range
+        self._update_accel_config()
+
+    def set_accel_bandwidth(self, bandwidth: int = BNO055_ACCEL_BANDWIDTH_64Hz):
+        """Sets teh acceleration update bandwidth to the specified value. Available values:
+
+        BNO055_ACCEL_BANDWIDTH_8Hz
+        BNO055_ACCEL_BANDWIDTH_16Hz
+        BNO055_ACCEL_BANDWIDTH_32Hz
+        BNO055_ACCEL_BANDWIDTH_64Hz
+        BNO055_ACCEL_BANDWIDTH_128Hz
+        BNO055_ACCEL_BANDWIDTH_256Hz
+        BNO055_ACCEL_BANDWIDTH_512Hz
+        BNO055_ACCEL_BANDWIDTH_1024Hz
+        """
+        self._accel_bandwidth = bandwidth
+        self._update_accel_config()
+
+    def set_accel_operation_mode(self, mode: int = BNO055_ACCEL_OPERATION_MODE_NORMAL):
+        """Sets the acceleration operation to the specified mode. Available modes:
+
+        BNO055_ACCEL_OPERATION_MODE_NORMAL
+        BNO055_ACCEL_OPERATION_MODE_SUSPEND
+        BNO055_ACCEL_OPERATION_MODE_LOW_POWER_1
+        BNO055_ACCEL_OPERATION_MODE_STANDBY
+        BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2
+        BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND
+        """
+        self._accel_operation_mode = mode
+        self._update_accel_config()
 
     def get_revision(self):
         """Return a tuple with revision information about the BNO055 chip.  Will

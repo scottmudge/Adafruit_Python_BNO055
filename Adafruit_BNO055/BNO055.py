@@ -61,9 +61,9 @@ BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2     = 0b00000100
 BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND    = 0b00000101
 
 # Accel Config Bitshifts
-BNO055_ACCEL_OPERATION_MODE_BITSHIFT        = 0
-BNO055_ACCEL_BANDWIDTH_BITSHIFT             = 3
-BNO055_ACCEL_G_RANGE_BITSHIFT               = 6
+BNO055_ACCEL_BANDWIDTH_BITSHIFT             = 2
+BNO055_ACCEL_OPERATION_MODE_BITSHIFT        = 5
+BNO055_ACCEL_G_RANGE_BITSHIFT               = 0
 
 # PAGE0 REGISTER DEFINITION START
 BNO055_CHIP_ID_ADDR                  = 0x00
@@ -404,7 +404,8 @@ class BNO055(object):
 
     def _update_accel_config(self):
         """Sets the acceleration config according to the datasheet (see set_mode)."""
-        byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
+        byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
+        # byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
 
         # Change to config mode
         self._config_mode()

@@ -405,6 +405,8 @@ class BNO055(object):
     def _update_accel_config(self):
         """Sets the acceleration config according to the datasheet (see set_mode)."""
         byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
+
+        # Send config byte to accel config register addr
         self._write_byte(BNO055_ACCEL_CFG_ADDR, byte & 0xFF)
         # Sleep for 20 ms to allow changes time to propagate
         time.sleep(0.02)

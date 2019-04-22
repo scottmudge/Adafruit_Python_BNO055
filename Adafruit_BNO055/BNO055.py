@@ -401,8 +401,8 @@ class BNO055(object):
 
     def _update_accel_config(self):
         """Sets the acceleration config according to the datasheet (see set_mode)."""
-        # byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
-        byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
+        byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
+        # byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
 
         # Change to config mode
         self._config_mode()

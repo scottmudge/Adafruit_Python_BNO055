@@ -404,8 +404,6 @@ class BNO055(object):
         # byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
         byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
 
-        # Change to config mode
-        self._config_mode()
         # Set to Page 1
         self._write_byte(BNO055_PAGE_ID_ADDR, 0x01)
         # Sleep, allow change
@@ -420,9 +418,6 @@ class BNO055(object):
         self._write_byte(BNO055_PAGE_ID_ADDR, 0x00)
         time.sleep(0.02)
 
-        # Return to operation mode
-        self._operation_mode()
-
     def begin(self, mode=OPERATION_MODE_NDOF, **kwargs):
         """Initialize the BNO055 sensor.  Must be called once before any other
         BNO055 library functions.  Will return True if the BNO055 was
@@ -430,6 +425,17 @@ class BNO055(object):
         """
         # Save the desired normal operation mode.
         self._mode = mode
+
+        # Copy kwargs to config
+        if kwargs is not None:
+            for key, value in kwargs.items():
+                if key == 'accel_bandwidth':
+                    self._accel_bandwidth = value
+                elif key == 'accel_g_range':
+                    self._accel_g_range = value
+                elif key == 'accel_operation_mode':
+                    self._accel_operation_mode = value
+
         # First send a thow-away command and ignore any response or I2C errors
         # just to make sure the BNO is in a good state and ready to accept
         # commands (this seems to be necessary after a hard power down).
@@ -466,6 +472,11 @@ class BNO055(object):
         self._write_byte(BNO055_PWR_MODE_ADDR, POWER_MODE_NORMAL)
         # Default to internal oscillator.
         self._write_byte(BNO055_SYS_TRIGGER_ADDR, 0x0)
+
+        # Set accelerometer config
+        self._update_accel_config()
+
+
         # Enter normal operation mode.
         self._operation_mode()
         return True
@@ -481,45 +492,45 @@ class BNO055(object):
         # too).
         time.sleep(0.03)
 
-    def set_accel_g_range(self, g_range = BNO055_ACCEL_G_RANGE_4G):
-        """Sets the acceleration G-Range to the specified range. Available ranges:
-
-        BNO055_ACCEL_G_RANGE_2G
-        BNO055_ACCEL_G_RANGE_4G
-        BNO055_ACCEL_G_RANGE_8G
-        BNO055_ACCEL_G_RANGE_16G
-
-        """
-        self._accel_g_range = g_range
-        self._update_accel_config()
-
-    def set_accel_bandwidth(self, bandwidth =BNO055_ACCEL_BANDWIDTH_64Hz):
-        """Sets teh acceleration update bandwidth to the specified value. Available values:
-
-        BNO055_ACCEL_BANDWIDTH_8Hz
-        BNO055_ACCEL_BANDWIDTH_16Hz
-        BNO055_ACCEL_BANDWIDTH_32Hz
-        BNO055_ACCEL_BANDWIDTH_64Hz
-        BNO055_ACCEL_BANDWIDTH_128Hz
-        BNO055_ACCEL_BANDWIDTH_256Hz
-        BNO055_ACCEL_BANDWIDTH_512Hz
-        BNO055_ACCEL_BANDWIDTH_1024Hz
-        """
-        self._accel_bandwidth = bandwidth
-        self._update_accel_config()
-
-    def set_accel_operation_mode(self, mode = BNO055_ACCEL_OPERATION_MODE_NORMAL):
-        """Sets the acceleration operation to the specified mode. Available modes:
-
-        BNO055_ACCEL_OPERATION_MODE_NORMAL
-        BNO055_ACCEL_OPERATION_MODE_SUSPEND
-        BNO055_ACCEL_OPERATION_MODE_LOW_POWER_1
-        BNO055_ACCEL_OPERATION_MODE_STANDBY
-        BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2
-        BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND
-        """
-        self._accel_operation_mode = mode
-        self._update_accel_config()
+    # def set_accel_g_range(self, g_range = BNO055_ACCEL_G_RANGE_4G):
+    #     """Sets the acceleration G-Range to the specified range. Available ranges:
+    #
+    #     BNO055_ACCEL_G_RANGE_2G
+    #     BNO055_ACCEL_G_RANGE_4G
+    #     BNO055_ACCEL_G_RANGE_8G
+    #     BNO055_ACCEL_G_RANGE_16G
+    #
+    #     """
+    #     self._accel_g_range = g_range
+    #     self._update_accel_config()
+    #
+    # def set_accel_bandwidth(self, bandwidth =BNO055_ACCEL_BANDWIDTH_64Hz):
+    #     """Sets teh acceleration update bandwidth to the specified value. Available values:
+    #
+    #     BNO055_ACCEL_BANDWIDTH_8Hz
+    #     BNO055_ACCEL_BANDWIDTH_16Hz
+    #     BNO055_ACCEL_BANDWIDTH_32Hz
+    #     BNO055_ACCEL_BANDWIDTH_64Hz
+    #     BNO055_ACCEL_BANDWIDTH_128Hz
+    #     BNO055_ACCEL_BANDWIDTH_256Hz
+    #     BNO055_ACCEL_BANDWIDTH_512Hz
+    #     BNO055_ACCEL_BANDWIDTH_1024Hz
+    #     """
+    #     self._accel_bandwidth = bandwidth
+    #     self._update_accel_config()
+    #
+    # def set_accel_operation_mode(self, mode = BNO055_ACCEL_OPERATION_MODE_NORMAL):
+    #     """Sets the acceleration operation to the specified mode. Available modes:
+    #
+    #     BNO055_ACCEL_OPERATION_MODE_NORMAL
+    #     BNO055_ACCEL_OPERATION_MODE_SUSPEND
+    #     BNO055_ACCEL_OPERATION_MODE_LOW_POWER_1
+    #     BNO055_ACCEL_OPERATION_MODE_STANDBY
+    #     BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2
+    #     BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND
+    #     """
+    #     self._accel_operation_mode = mode
+    #     self._update_accel_config()
 
     def get_revision(self):
         """Return a tuple with revision information about the BNO055 chip.  Will

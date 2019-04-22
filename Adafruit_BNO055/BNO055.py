@@ -60,11 +60,6 @@ BNO055_ACCEL_OPERATION_MODE_STANDBY         = 0b00000011
 BNO055_ACCEL_OPERATION_MODE_LOW_POWER_2     = 0b00000100
 BNO055_ACCEL_OPERATION_MODE_DEEP_SUSPEND    = 0b00000101
 
-# Accel Config Bitshifts
-BNO055_ACCEL_BANDWIDTH_BITSHIFT             = 2
-BNO055_ACCEL_OPERATION_MODE_BITSHIFT        = 5
-BNO055_ACCEL_G_RANGE_BITSHIFT               = 0
-
 # PAGE0 REGISTER DEFINITION START
 BNO055_CHIP_ID_ADDR                  = 0x00
 BNO055_ACCEL_REV_ID_ADDR             = 0x01
@@ -409,16 +404,24 @@ class BNO055(object):
 
         # Change to config mode
         self._config_mode()
+        # Set to Page 1
+        self._write_byte(BNO055_PAGE_ID_ADDR, 0x01)
+        # Sleep, allow change
+        time.sleep(0.02)
 
         # Send config byte to accel config register addr
         self._write_byte(BNO055_ACCEL_CFG_ADDR, byte & 0xFF)
         # Sleep for 20 ms to allow changes time to propagate
         time.sleep(0.02)
 
+        # Set back to page zero (default)
+        self._write_byte(BNO055_PAGE_ID_ADDR, 0x00)
+        time.sleep(0.02)
+
         # Return to operation mode
         self._operation_mode()
 
-    def begin(self, mode=OPERATION_MODE_NDOF):
+    def begin(self, mode=OPERATION_MODE_NDOF, **kwargs):
         """Initialize the BNO055 sensor.  Must be called once before any other
         BNO055 library functions.  Will return True if the BNO055 was
         successfully initialized, and False otherwise.

@@ -423,7 +423,7 @@ class BNO055(object):
         # Return to operation mode
         self._operation_mode()
 
-    def begin(self, mode=OPERATION_MODE_NDOF, **kwargs):
+    def begin(self, mode=OPERATION_MODE_NDOF):
         """Initialize the BNO055 sensor.  Must be called once before any other
         BNO055 library functions.  Will return True if the BNO055 was
         successfully initialized, and False otherwise.

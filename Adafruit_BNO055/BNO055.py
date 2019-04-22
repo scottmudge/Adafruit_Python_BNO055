@@ -260,6 +260,8 @@ class BNO055(object):
             time.sleep(0.65)
         self._serial = None
 
+        self._mode = OPERATION_MODE_NDOF
+
         self._accel_g_range = BNO055_ACCEL_G_RANGE_4G
         self._accel_bandwidth = BNO055_ACCEL_BANDWIDTH_64Hz
         self._accel_operation_mode = BNO055_ACCEL_OPERATION_MODE_NORMAL
@@ -399,8 +401,8 @@ class BNO055(object):
 
     def _update_accel_config(self):
         """Sets the acceleration config according to the datasheet (see set_mode)."""
-        byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
-        # byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
+        # byte = self._accel_g_range | (self._accel_bandwidth << 2) | (self._accel_operation_mode << 5)
+        byte = self._accel_operation_mode | (self._accel_bandwidth >> 3) | (self._accel_g_range >> 6)
 
         # Change to config mode
         self._config_mode()
